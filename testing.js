@@ -27,7 +27,7 @@ function cookAndDeliverFood(callBack){
 }
 
 //Simulate database requests
-placeAnOrder(1);
+placeAnOrder(1); 
 placeAnOrder(2);
 placeAnOrder(3);
 placeAnOrder(4);
