@@ -1,20 +1,52 @@
-#
-# TCP Client
-#
-from socket import *
-from ctypes import *
-import time
+import socket, select, string, sys
 
-#Setting up the socket
-serverName = 'localhost'
-serverPort = 12000
-clientSocket = socket(AF_INET, SOCK_STREAM)
-clientSocket.connect((serverName,serverPort))
+def prompt():
+	sys.stdout.write("<You>")
+	sys.stdout.flush()
 
-message = input("Enter your message: ")
+if __name__ == "__main__":
 
-clientSocket.send(message)
+	if(len(sys.argv) < 3):
+		print("Usage: python telnet.py hostname port")
+		sys.exit()
 	
-print ('Data sent to server.')
+	host = sys.argv[1]
+	port = int(sys.argv[2])
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.settimeout(2)
 
-clientSocket.close()
+	#connect to remote host
+	try:
+		s.connect((host, port))
+	except:
+		print("Unable to connect.")
+		sys.exit()
+	print("Connected to remote host. Chat away good sir!")
+	prompt()
+
+	while 1:
+		socketList = [sys.stdin, s]
+
+		# Get the list sockets which are readable
+		readSockets, writeSockets, errorSockets = select.select(socketList, [], [])
+
+		for sock in readSockets:
+			#incoming message from server
+			if sock == s:
+				data = sock.recieve(4096)
+				if not data:
+					print("\nDisconnected from chat server")
+					sys.exit()
+				else:
+						data = data.decode()
+						#print data
+						sys.stdout.write(data)
+						prompt()
+
+			#user entered a message
+			else:
+				message = sys.stdin.readline()
+				s.send(message.encode())
+				prompt()
+
+s.close()
