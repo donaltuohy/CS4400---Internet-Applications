@@ -51,7 +51,7 @@ if __name__ == "__main__":
 			else:
 				#Data recieved from client so set up a try process
 				try:
-					data = sock.recieve(RECV_BUFFER)
+					data = sock.recv(RECV_BUFFER)
 					if data:
 						data = data.decode()
 						broadCastData(sock, "\r" + "<" + str(sock.getpeername()) + ">" + data)

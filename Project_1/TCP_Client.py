@@ -21,8 +21,13 @@ if __name__ == "__main__":
 	except:
 		print("Unable to connect.")
 		sys.exit()
+	
+	#DisplayName = input("Enter your display name: ")
+
 	print("Connected to remote host. Chat away good sir!")
 	prompt()
+
+	RECV_BUFFER = 4096
 
 	while 1:
 		socketList = [sys.stdin, s]
@@ -33,7 +38,7 @@ if __name__ == "__main__":
 		for sock in readSockets:
 			#incoming message from server
 			if sock == s:
-				data = sock.recieve(4096)
+				data = sock.recv(RECV_BUFFER)
 				if not data:
 					print("\nDisconnected from chat server")
 					sys.exit()
