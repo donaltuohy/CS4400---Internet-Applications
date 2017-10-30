@@ -4,11 +4,20 @@ def prompt():
 	sys.stdout.write("<You>")
 	sys.stdout.flush()
 
+def JoinChatMessage(chatroomName, userName):
+	chatroomName = "JOIN CHATROOM: " + chatroomName + "\n"
+	userName = "CLIENT_NAME: " + userName + "\n"
+	return chatroomName + "CLIENT_IP: 0\n" + "PORT: 0\n" + userName
+
+
+
 if __name__ == "__main__":
 
 	if(len(sys.argv) < 3):
 		print("Usage: python telnet.py hostname port")
 		sys.exit()
+	
+	displayName = input("Enter your display name: ")
 	
 	host = sys.argv[1]
 	port = int(sys.argv[2])
@@ -22,9 +31,8 @@ if __name__ == "__main__":
 		print("Unable to connect.")
 		sys.exit()
 	
-	#DisplayName = input("Enter your display name: ")
-
 	print("Connected to remote host. Chat away good sir!")
+	s.send(JoinChatMessage("JIMS ROOM", displayName).encode())
 	prompt()
 
 	RECV_BUFFER = 4096
@@ -34,6 +42,7 @@ if __name__ == "__main__":
 
 		# Get the list sockets which are readable
 		readSockets, writeSockets, errorSockets = select.select(socketList, [], [])
+
 
 		for sock in readSockets:
 			#incoming message from server

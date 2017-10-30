@@ -3,6 +3,9 @@
  
 import socket, select
 
+def parseName(joinMessage):
+	Username = joinMessage.split()[9:]
+	return Username
 
 #Function which broadcast a message to all connected clients bar the server and the one that sent the message
 def broadCastData(sock, message):
@@ -54,8 +57,14 @@ if __name__ == "__main__":
 					data = sock.recv(RECV_BUFFER)
 					if data:
 						data = data.decode()
-						broadCastData(sock, "\r" + "<" + str(sock.getpeername()) + ">" + data)
+						if(data[:13] == "JOIN CHATROOM:"):
+							Username = parseName(data)
+							print(Username, "has joined the room.")
+							broadCastData(sock, Username + "has joined the room.")
+						else:
+							broadCastData(sock, "\r" + "<>" + data)
 				except:
+					print(data)
 					broadCastData(sock, "Client (%s, %s) is offline" % addr)
 					print("Client", addr, "is offline")
 					sock.close()
