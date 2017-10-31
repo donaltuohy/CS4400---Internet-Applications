@@ -1,7 +1,24 @@
 # chat_server.py
 
- 
+from threading import Thread 
+from SocketServer import ThreadingMixIn  
 import socket, select
+
+class threadForClient(Thread):
+
+	def __init__(self, ip, port):
+		Thread.__init__(self)
+		self.ip = ip
+		self.port = port
+		print("New server socket thread started for : ", ip, ":", port)
+
+	def run(self):
+		while True:
+			data = conn.recv(RECV_BUFFER)
+			
+
+
+
 
 def parseName(joinMessage):
 	Username = joinMessage.split()[9:]
