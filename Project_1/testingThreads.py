@@ -3,6 +3,25 @@ import threading
 
 listOfClients = {}
 
+def parseName(joinMessage):
+    Username = joinMessage.split()[8]
+    return Username
+
+#Function which broadcast a message to all connected clients bar the server and the one that sent the message
+def broadCastData(sock, message):
+    for key in listOfClients:
+        socket = (listOfClients[key])[0]
+        if socket != sock:
+            try:
+                #Send the message to the current client socket
+                socket.send(message.encode())
+            except: 
+                #Client socket not working, close it and remove it from the list of sockets
+                print("Socket not working. Closing down that connection")
+                socket.close()
+                del listOfClients[key]
+
+
 class ThreadedServer(object):
     def __init__(self, host, port):
         self.host = host
@@ -14,24 +33,29 @@ class ThreadedServer(object):
         self.sock.listen(5)
         while True:
             client, address = self.sock.accept()
+            socketKey = address[1]
             if client:
-                print("Client joined: ", address)
-                listOfClients[address[1]] = [client,""]
+                listOfClients[socketKey] = [client,""]
             client.settimeout(50)
-            client.send(("Hello, This was sent from server").encode())
-            threading.Thread(target = self.listenToClient, args = (client, address)).start()
+            client.send(("Welcome to the chat room.\n\n").encode())
+            threading.Thread(target = self.listenToClient, args = (client, address, socketKey)).start()
 
-    def listenToClient(self, client, address):
+    def listenToClient(self, client, address, socketKey):
         while True:
             try:
                 data = (client.recv(1024)).decode()
                 if data:
-                    print(data)
-                    print(listOfClients)
-                    response = data.encode()
-                    client.send(response)
+                    if(data[:13] == "JOIN CHATROOM"):
+                        listOfClients[socketKey] = [client,parseName(data)]
+                        clientName = (listOfClients[socketKey])[1]                      
+                        print(clientName," has joined the chat room.")
+                        broadCastData(client,clientName + " has joined the chatroom.")
+                    else:
+                        response = data.encode()
+                        broadCastData(client, "<" + clientName + "> " + data)
             except:
-                print("Client disconnected")
+                print(clientName + " has left the chatroom")
+                broadCastData(client,clientName + " has left the chatroom.")
                 del listOfClients[address[1]]
                 client.close()
                 return False
