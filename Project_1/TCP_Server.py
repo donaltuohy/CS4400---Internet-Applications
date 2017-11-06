@@ -1,22 +1,19 @@
 # chat_server.py
 
 from threading import Thread 
-from SocketServer import ThreadingMixIn  
 import socket, select
 
-class threadForClient(Thread):
+#class threadForClient(Thread):
 
-	def __init__(self, ip, port):
-		Thread.__init__(self)
-		self.ip = ip
-		self.port = port
-		print("New server socket thread started for : ", ip, ":", port)
+	#def __init__(self, ip, port):
+	#	Thread.__init__(self)
+	#	self.ip = ip
+	#	self.port = port
+	#	print("New server socket thread started for : ", ip, ":", port)
 
-	def run(self):
-		while True:
-			data = conn.recv(RECV_BUFFER)
-			
-
+	#def run(self):
+	#	while True:
+	#		data = conn.recv(RECV_BUFFER)			
 
 
 
@@ -74,14 +71,17 @@ if __name__ == "__main__":
 					data = sock.recv(RECV_BUFFER)
 					if data:
 						data = data.decode()
-						if(data[:13] == "JOIN CHATROOM:"):
+						if(data[:13] == "JOIN CHATROOM"):
 							Username = parseName(data)
+							print("Connection list: ",CONNECTION_LIST)
 							print(Username, "has joined the room.")
 							broadCastData(sock, Username + "has joined the room.")
 						else:
+							print("Data: ", data[:13] )
+							print("Message thing didn't work")
 							broadCastData(sock, "\r" + "<>" + data)
 				except:
-					print(data)
+					print("About to close connection")
 					broadCastData(sock, "Client (%s, %s) is offline" % addr)
 					print("Client", addr, "is offline")
 					sock.close()
