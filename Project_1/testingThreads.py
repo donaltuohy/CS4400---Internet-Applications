@@ -6,7 +6,7 @@ listOfClients = {}
 def closeAllPorts():
     for key in listOfClients:
         socket = (listOfClients[key])[0]
-        socket.close()
+        socket.send(("-9999").encode())
     print("All ports closed. Goodbye.")
 
 def parseName(joinMessage):
@@ -51,18 +51,19 @@ class ThreadedServer(object):
             try:
                 data = (client.recv(1024)).decode()
                 if data:
+                    print(data)
                     if(data[:13] == "JOIN CHATROOM"):
                         listOfClients[socketKey] = [client,parseName(data)]
                         clientName = (listOfClients[socketKey])[1]                      
                         print(clientName," has joined the chat room.")
-                        broadCastData(client,clientName + " has joined the chatroom.")
+                        broadCastData(client,clientName + " has joined the chatroom.\n")
                     elif data == "KILL_SERVICE\n":
                         print("Terminating sevrice")
                         closeAllPorts()
                         return
                     else:
                         response = data.encode()
-                        broadCastData(client, data)
+                        broadCastData(client, "[" + clientName + "]:" + data)
             except:
                 print(clientName + " has left the chatroom")
                 broadCastData(client,clientName + " has left the chatroom.")

@@ -22,11 +22,11 @@ class ThreadedClient(object):
         while True:
             try:
                 response = (self.sock.recv(1024)).decode()
-                if response == "":
-                    print("Pipe broken, error 1: Disconnecting")
+                if response == "" or response == "-9999":
                     self.sock.close()
                     self.finished = True
-                    print("Setting finished true!!!!!!!!!!!")
+                    print("Chatroom has closed, goodbye.")
+                    print("Press enter to exit.")
                     break
                 else:
                     sys.stdout.write(response)
@@ -47,6 +47,9 @@ class ThreadedClient(object):
                 print(chr(27) + "[2J") #Clear the console
                 message = joinChatMessage("Chatroom", name)
                 self.joinedRoom = True
+            
+            if self.finished:
+                return
             
             try:
                 self.sock.send(message.encode())
