@@ -1,6 +1,7 @@
 import socket, sys, time
 import threading
 
+
 def joinChatMessage(chatroomName, userName):
 	chatroomName = "JOIN CHATROOM: " + chatroomName + "\n"
 	userName = "CLIENT_NAME: " + userName + "\n"
@@ -14,6 +15,7 @@ class ThreadedClient(object):
         self.sock.connect((ip, port))
         self.sock.settimeout(600)
         self.joinedRoom = False
+        self.finished = False
     
     def listenToServer(self):
         
@@ -23,7 +25,9 @@ class ThreadedClient(object):
                 if response == "":
                     print("Pipe broken, error 1: Disconnecting")
                     self.sock.close()
-                    sys.exit()
+                    self.finished = True
+                    print("Setting finished true!!!!!!!!!!!")
+                    break
                 else:
                     sys.stdout.write(response)
             except:
@@ -31,12 +35,12 @@ class ThreadedClient(object):
                 
 
     def sendToServer(self):
-        name = input("Enter your name: ")
+        name = input("Enter you name:")
         threading.Thread(target = self.listenToServer).start()
-        print("In server function")
-        print("Number of Threads: ", threading.activeCount())
         while True:
-            if self.joinedRoom ==True:
+            if self.finished:
+                return
+            if self.joinedRoom:
                 message = sys.stdin.readline()
 
             else:
@@ -59,7 +63,3 @@ if __name__ == "__main__":
     host = sys.argv[1]
     port = int(sys.argv[2])
     ThreadedClient(host,port).sendToServer()
-
-    
-
-    

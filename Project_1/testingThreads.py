@@ -3,6 +3,12 @@ import threading
 
 listOfClients = {}
 
+def closeAllPorts():
+    for key in listOfClients:
+        socket = (listOfClients[key])[0]
+        socket.close()
+    print("All ports closed. Goodbye.")
+
 def parseName(joinMessage):
     Username = joinMessage.split()[8]
     return Username
@@ -50,9 +56,13 @@ class ThreadedServer(object):
                         clientName = (listOfClients[socketKey])[1]                      
                         print(clientName," has joined the chat room.")
                         broadCastData(client,clientName + " has joined the chatroom.")
+                    elif data == "KILL_SERVICE\n":
+                        print("Terminating sevrice")
+                        closeAllPorts()
+                        return
                     else:
                         response = data.encode()
-                        broadCastData(client, "\n" + "<" + clientName + ">" + data)
+                        broadCastData(client, data)
             except:
                 print(clientName + " has left the chatroom")
                 broadCastData(client,clientName + " has left the chatroom.")
