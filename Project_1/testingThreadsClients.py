@@ -1,15 +1,10 @@
 import socket, sys, time
 import threading
 
-ERASE_LINE = '\x1b[2K'
-
 def joinChatMessage(chatroomName, userName):
 	chatroomName = "JOIN CHATROOM: " + chatroomName + "\n"
 	userName = "CLIENT_NAME: " + userName + "\n"
 	return chatroomName + "CLIENT_IP: 0\n" + "PORT: 0\n" + userName
-
-def prompt():
-	sys.stdout.write('<You>')
 
 
 class ThreadedClient(object):
@@ -30,9 +25,7 @@ class ThreadedClient(object):
                     self.sock.close()
                     sys.exit()
                 else:
-                    sys.stdout.write(ERASE_LINE)
                     sys.stdout.write(response)
-
             except:
                 sys.exit()
                 
@@ -44,7 +37,6 @@ class ThreadedClient(object):
         print("Number of Threads: ", threading.activeCount())
         while True:
             if self.joinedRoom ==True:
-                prompt()
                 message = sys.stdin.readline()
 
             else:

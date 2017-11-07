@@ -1,20 +1,34 @@
 # chat_server.py
 
+#Outline (Need to get it working like this)#
+
+###########################################
+#Start server
+#check for connection
+#if there is one, create new client object
+#client object runs starting a new thread
+#if it gets a message, broadcast it 
+#if the pipe breaks, the client disconnects
+###########################################
+
 from threading import Thread 
 import socket, select
 
-#class threadForClient(Thread):
+class threadForClient(Thread):
 
-	#def __init__(self, ip, port):
-	#	Thread.__init__(self)
-	#	self.ip = ip
-	#	self.port = port
-	#	print("New server socket thread started for : ", ip, ":", port)
+	def __init__(self, ip, port):
+		Thread.__init__(self)
+		self.ip = ip
+		self.port = port
+		print("New server socket thread started for client: ", ip, ":", port)
 
-	#def run(self):
-	#	while True:
-	#		data = conn.recv(RECV_BUFFER)			
-
+	def run(self):
+		while True:
+			try:
+				data = conn.recv(RECV_BUFFER)
+				broadCastData()		
+			except BrokenPipeError as e:
+					print(e)
 
 
 def parseName(joinMessage):

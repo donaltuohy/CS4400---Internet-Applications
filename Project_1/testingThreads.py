@@ -52,7 +52,7 @@ class ThreadedServer(object):
                         broadCastData(client,clientName + " has joined the chatroom.")
                     else:
                         response = data.encode()
-                        broadCastData(client, "<" + clientName + "> " + data)
+                        broadCastData(client, "\n" + "<" + clientName + ">" + data)
             except:
                 print(clientName + " has left the chatroom")
                 broadCastData(client,clientName + " has left the chatroom.")
