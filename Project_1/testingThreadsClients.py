@@ -42,12 +42,12 @@ class ThreadedClient(object):
                 return
             if self.joinedRoom:
                 message = sys.stdin.readline()
-
             else:
                 print(chr(27) + "[2J") #Clear the console
+                print("Welcome to the chatroom")
+                print("_____________________________________")
                 message = joinChatMessage("Chatroom", name)
                 self.joinedRoom = True
-            
             if self.finished:
                 return
             

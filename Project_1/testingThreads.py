@@ -13,6 +13,9 @@ def parseName(joinMessage):
     Username = joinMessage.split()[8]
     return Username
 
+def HELO(host, port):
+    return "HELO text\nIP: " + str(host) + "\nPort: " + str(port) + "\nStudentID: 14313774\n" 
+
 #Function which broadcast a message to all connected clients bar the server and the one that sent the message
 def broadCastData(sock, message):
     for key in listOfClients:
@@ -34,24 +37,27 @@ class ThreadedServer(object):
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.host, self.port))
+        self.finished = False
     
     def listen(self):
         self.sock.listen(5)
         while True:
+            if self.finished:
+                return
             client, address = self.sock.accept()
             socketKey = address[1]
             if client:
                 listOfClients[socketKey] = [client,""]
             client.settimeout(50)
-            client.send(("Welcome to the chat room.\n\n").encode())
             threading.Thread(target = self.listenToClient, args = (client, address, socketKey)).start()
 
     def listenToClient(self, client, address, socketKey):
         while True:
+            if self.finished == True:
+                return
             try:
                 data = (client.recv(1024)).decode()
                 if data:
-                    print(data)
                     if(data[:13] == "JOIN CHATROOM"):
                         listOfClients[socketKey] = [client,parseName(data)]
                         clientName = (listOfClients[socketKey])[1]                      
@@ -61,6 +67,9 @@ class ThreadedServer(object):
                         print("Terminating sevrice")
                         closeAllPorts()
                         return
+                    elif data == "HELO text\n":
+                        response = HELO(self.host, self.port).encode()
+                        client.send(response)
                     else:
                         response = data.encode()
                         broadCastData(client, "[" + clientName + "]:" + data)
