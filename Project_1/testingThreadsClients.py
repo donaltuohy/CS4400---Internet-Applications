@@ -45,7 +45,7 @@ class ThreadedClient(object):
             else:
                 print(chr(27) + "[2J") #Clear the console
                 print("Welcome to the chatroom")
-                print("_____________________________________")
+                print("_____________________________________\n")
                 message = joinChatMessage("Chatroom", name)
                 self.joinedRoom = True
             if self.finished:

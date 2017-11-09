@@ -1,23 +1,41 @@
 import socket
 import threading
 
-listOfClients = {}
 
-def closeAllPorts():
+listOfRooms = {}
+listOfRoomsIds = {}
+
+
+
+def closeAllRooms():
+    for key in listOfRooms:
+        closeAllPorts(listOfRooms[key].listOfClients)
+        del listOfRooms[key]
+    print("All ports closed. Goodbye.")
+
+def closeAllPorts(listOfClients):
     for key in listOfClients:
         socket = (listOfClients[key])[0]
         socket.send(("-9999").encode())
-    print("All ports closed. Goodbye.")
 
 def parseName(joinMessage):
     Username = joinMessage.split()[8]
-    return Username
+    chatroomName = joinMessage.split()[2]
+    return chatroomName, Username
+
+def parseMessage(chatMessage):
+    splitMessage = chatMessage.split()
+    chatroom = splitMessage[1]
+    joinID = splitMessage[3]
+    clientName = splitMessage[5]
+    message = splitMessage[7:]
+    return chatroom, joinID, clientName, message
 
 def HELO(host, port):
     return "HELO text\nIP: " + str(host) + "\nPort: " + str(port) + "\nStudentID: 14313774\n" 
 
 #Function which broadcast a message to all connected clients bar the server and the one that sent the message
-def broadCastData(sock, message):
+def broadCastData(listOfClients,sock, message):
     for key in listOfClients:
         socket = (listOfClients[key])[0]
         if socket != sock:
@@ -30,6 +48,15 @@ def broadCastData(sock, message):
                 socket.close()
                 del listOfClients[key]
 
+class chatRoom(object):
+    def __init__(self, name, firstClient, firstClientName, roomID):
+        self.ChatroomName = name
+        self.listOfClients = {}
+        self.listOfClients.append([firstClient, firstClientName , 0)
+        self.ID = roomID
+        self.numberOfClients = 1
+        self.clientIDs = 1
+
 
 class ThreadedServer(object):
     def __init__(self, host, port):
@@ -38,18 +65,23 @@ class ThreadedServer(object):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((self.host, self.port))
         self.finished = False
+        self.chatRoomIdCount = 0
     
     def listen(self):
-        self.sock.listen(5)
-        while True:
-            if self.finished:
-                return
-            client, address = self.sock.accept()
-            socketKey = address[1]
-            if client:
-                listOfClients[socketKey] = [client,""]
-            client.settimeout(50)
-            threading.Thread(target = self.listenToClient, args = (client, address, socketKey)).start()
+        try:
+            self.sock.listen(5)
+            while True:
+                if self.finished:
+                    return
+                client, address = self.sock.accept()
+                socketKey = address[1]
+                if client:
+                    listOfClients[socketKey] = [client,"", self.numberOfJoinID]
+                    self.numberOfJoinID += 1
+                client.settimeout(50)
+                threading.Thread(target = self.listenToClient, args = (client, address, socketKey)).start()
+        except:
+            print("Closing Down")
 
     def listenToClient(self, client, address, socketKey):
         while True:
@@ -59,21 +91,32 @@ class ThreadedServer(object):
                 data = (client.recv(1024)).decode()
                 if data:
                     if(data[:13] == "JOIN CHATROOM"):
-                        listOfClients[socketKey] = [client,parseName(data)]
-                        clientName = (listOfClients[socketKey])[1]                      
-                        print(clientName," has joined the chat room.")
-                        broadCastData(client,clientName + " has joined the chatroom.\n")
-                    elif data == "KILL_SERVICE\n":
+                        chatroomName, clientName = parseName(data)
+                        if not listOfRooms[chatroomName]:
+                            listOfRooms[chatroomName] = [chatRoom(chatroomName,client, clientName, chatRoomIdCount)]
+                            listOfRoomsIds[chatRoomIdCount] = [chatroomName]
+                        else:
+                            listOfRooms[chatroomName].listOfClients[socketKey] = ([client, clientName, listOfRooms[chatroomName].numberOfJoinIdCount)
+                            listOfRooms[chatroomName].numberOfClients += 1
+                        listOfRooms[chatroomName].numberOfJoinID += 1
+                        print(clientName," has joined: ", chatroomName)
+                        print(clientName, " has the JoinID: ", listOfRooms[chatroomName].numberOfJoinID)
+                        broadCastData(listOfRooms[chatroomName].listOfClients, client, clientName + " has joined the chatroom.\n")
+                    elif(data[:4] == "CHAT"):
+
+                        
+                    elif (data == "KILL_SERVICE\n"):
                         print("Terminating sevrice")
-                        closeAllPorts()
+                        closeAllRooms()
                         return
-                    elif data == "HELO text\n":
+                    elif (data == "HELO text\n"):
                         response = HELO(self.host, self.port).encode()
                         client.send(response)
                     else:
                         response = data.encode()
-                        broadCastData(client, "[" + clientName + "]:" + data)
+                        broadCastData(,client, "[" + clientName + "]:" + data)
             except:
+                self.numberOfJoinID -= 1
                 print(clientName + " has left the chatroom")
                 broadCastData(client,clientName + " has left the chatroom.")
                 del listOfClients[address[1]]
@@ -81,12 +124,15 @@ class ThreadedServer(object):
                 return False
 
 if __name__ == "__main__":
-    while True:
-        portNum = input("Enter port number: ")
-        try:
-            portNum = int(portNum)
-            break
-        except ValueError:
-            pass
-    ThreadedServer('',portNum).listen()
-    
+    try:
+        while True:
+            portNum = input("Enter port number: ")
+            try:
+                portNum = int(portNum)
+                break
+            except ValueError:
+                pass
+        ThreadedServer('',portNum).listen()
+
+    except: 
+        print("Closing Down")
