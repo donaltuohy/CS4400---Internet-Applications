@@ -23,6 +23,9 @@ def parseChatMessage(message):
     chatMessage = splitMessage[5:]
     return chatroomName, senderName, chatMessage 
 
+def createLeaveMessage(roomID, joinID,clientName):
+    return "LEAVE_CHATROOM: " + roomID + "\nJOIN_ID: " + joinID + "\nCLIENT_NAME: " + clientName 
+
 class ThreadedClient(object):
 
     def __init__(self, ip, port):
@@ -67,6 +70,7 @@ class ThreadedClient(object):
                 #LEFT RESPONSE FROM CHATROOM
                 elif (response[:12] == "LEFT_CHATROOM"):
                     print("Succesfully left chatroom")
+                    self.joinedRoom = False
                 else:
                     sys.stdout.write(response)
             except:
@@ -82,6 +86,7 @@ class ThreadedClient(object):
             if self.joinedRoom:
                 message = sys.stdin.readline()
                 if message == "LEAVE":
+                    message = createLeaveMessage(self.roomID, self.joinID, name)
             else:
                 chatroomName = input("Enter chat room name: ")
                 message = joinChatMessage(chatroomName, name)
