@@ -25,28 +25,32 @@ def parseName(joinMessage):
 
 def parseMessage(chatMessage):
     splitMessage = chatMessage.split()
-    chatroom = splitMessage[1]
-    joinID = splitMessage[3]
+    chatroom = int(splitMessage[1])
+    joinID = int(splitMessage[3])
     clientName = splitMessage[5]
     message = splitMessage[7:]
+    message = " ".join(message)
     return chatroom, joinID, clientName, message
 
 def HELO(host, port):
     return "HELO text\nIP: " + str(host) + "\nPort: " + str(port) + "\nStudentID: 14313774\n" 
 
-def createChatBroadcast(chatroomName, clientName, message):
-    return "CHAT: " + chatroomName + "\nCLIENT_NAME: " + clientName + "\nMESSAGE: " + message
+def createChatBroadcast(roomID, clientName, message):
+    return "CHAT: " + str(roomID) + "\nCLIENT_NAME: " + clientName + "\nMESSAGE: " + message
 
 def createJoinBroadcast(chatroomName, host, port, roomID, joinID):
-    return "JOINED_CHATROOM: " + chatroomName + "\nSERVER_IP: " + host + "\nPORT: " + port + "\nROOM_REF: " +  roomID + "\nJOIN_ID: " + joinID
+    return "JOINED_CHATROOM: " + chatroomName + "\nSERVER_IP: " + str(host) + "\nPORT: " + str(port) + "\nROOM_REF: " +  str(roomID) + "\nJOIN_ID: " + str(joinID)
 
 #Function which broadcast a message to all connected clients bar the server and the one that sent the message
 def broadCastData(listOfClients,sock, message):
+    print("In broadcast function")
     for key in listOfClients:
+        print("In for loop")
         socket = (listOfClients[key])[0]
         if socket != sock:
             try:
                 #Send the message to the current client socket
+                print("sending ", message, " to ", listOfClients[key][1])
                 socket.send(message.encode())
             except: 
                 #Client socket not working, close it and remove it from the list of sockets
@@ -101,19 +105,22 @@ class ThreadedServer(object):
                         listOfRoomsIds[self.chatRoomIdCount] = [chatroomName]
                         self.chatRoomIdCount += 1
                     else:
-                        listOfRooms[chatroomName].listOfClients[socketKey] = ([client, clientName, (listOfRooms[chatroomName]).clientIDs])
+                        (listOfRooms[chatroomName])[0].listOfClients[socketKey] = ([client, clientName, (listOfRooms[chatroomName])[0].clientIDs])
                     
-                    (listOfRooms[chatroomName]).numberOfClients += 1
+                    (listOfRooms[chatroomName])[0].numberOfClients += 1
                     print(clientName," has joined: ", chatroomName)
-                    print(clientName, " has the JoinID: ", (listOfRooms[chatroomName]).numberOfJoinID)
-                    clientName.send(createJoinBroadcast(chatroomName, self.host, self.port, (listOfRooms[chatroomName]).roomID, (listOfRooms[chatroomName]).clientIDs))
-                    listOfRooms[chatroomName].clientIDs += 1
-                    broadCastData(listOfRooms[chatroomName].listOfClients, client, createJoinBroadcast(chatroomName,self.host,self.port, listOfRooms[chatroomName].clientIDs))
+                    print(clientName, " has the JoinID: ", (listOfRooms[chatroomName])[0].clientIDs)
+                    client.send((createJoinBroadcast(chatroomName, self.host, self.port, (listOfRooms[chatroomName])[0].ID, (listOfRooms[chatroomName])[0].clientIDs)).encode())
+                    (listOfRooms[chatroomName])[0].clientIDs += 1
+                    broadCastData((listOfRooms[chatroomName])[0].listOfClients, client, createJoinBroadcast(chatroomName,self.host,self.port, (listOfRooms[chatroomName])[0].ID,(listOfRooms[chatroomName])[0].clientIDs))
                     
                 #CLIENT SENDS CHAT MESSAGE
                 elif(data[:4] == "CHAT"):
-                    chatroomName, joinID, clientName, message = parseMessage(data)
-                    broadCastData(listOfRooms[chatroomName].listOfClients,client, createChatBroadcast(chatroomName,clientName, message))
+                    print("chat message recieved")
+                    print(data)
+                    roomID, joinID, clientName, message = parseMessage(data)
+                    chatroomName = (listOfRoomsIds[roomID])[0]
+                    broadCastData((listOfRooms[chatroomName])[0].listOfClients, client, createChatBroadcast(roomID,clientName, message))
                     
                 #CLIENT SENDS KILL MESSAGE
                 elif (data == "KILL_SERVICE\n"):
