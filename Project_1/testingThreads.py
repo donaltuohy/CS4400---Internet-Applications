@@ -34,6 +34,12 @@ def parseMessage(chatMessage):
 def HELO(host, port):
     return "HELO text\nIP: " + str(host) + "\nPort: " + str(port) + "\nStudentID: 14313774\n" 
 
+def createChatBroadcast(chatroomName, clientName, message):
+    return "CHAT: " + chatroomName + "\nCLIENT_NAME: " + clientName + "\nMESSAGE: " + message
+
+def createJoinBroadcast(chatroomName, host, port, roomID, joinID):
+    return "JOINED_CHATROOM: " + chatroomName + "\nSERVER_IP: " + host + "\nPORT: " + port + "\nROOM_REF: " +  roomID + "\nJOIN_ID: " + joinID
+
 #Function which broadcast a message to all connected clients bar the server and the one that sent the message
 def broadCastData(listOfClients,sock, message):
     for key in listOfClients:
@@ -48,16 +54,17 @@ def broadCastData(listOfClients,sock, message):
                 socket.close()
                 del listOfClients[key]
 
+#CLASS FOR EACH CHATROOM
 class chatRoom(object):
     def __init__(self, name, firstClient, firstClientName, roomID):
         self.ChatroomName = name
         self.listOfClients = {}
-        self.listOfClients.append([firstClient, firstClientName , 0)
+        self.listOfClients.append([firstClient, firstClientName , 0])
         self.ID = roomID
         self.numberOfClients = 1
         self.clientIDs = 1
 
-
+#MAIN CLASS
 class ThreadedServer(object):
     def __init__(self, host, port):
         self.host = host
@@ -90,31 +97,43 @@ class ThreadedServer(object):
             try:
                 data = (client.recv(1024)).decode()
                 if data:
+                    
+                    #CLIENT SENDS JOIN MESSAGE
                     if(data[:13] == "JOIN CHATROOM"):
                         chatroomName, clientName = parseName(data)
                         if not listOfRooms[chatroomName]:
                             listOfRooms[chatroomName] = [chatRoom(chatroomName,client, clientName, chatRoomIdCount)]
                             listOfRoomsIds[chatRoomIdCount] = [chatroomName]
+                            listOfRooms[chatroomName].chatRoomIdCount += 1
                         else:
-                            listOfRooms[chatroomName].listOfClients[socketKey] = ([client, clientName, listOfRooms[chatroomName].numberOfJoinIdCount)
+                            listOfRooms[chatroomName].listOfClients[socketKey] = ([client, clientName, listOfRooms[chatroomName].numberOfJoinIdCount])
                             listOfRooms[chatroomName].numberOfClients += 1
                         listOfRooms[chatroomName].numberOfJoinID += 1
                         print(clientName," has joined: ", chatroomName)
                         print(clientName, " has the JoinID: ", listOfRooms[chatroomName].numberOfJoinID)
-                        broadCastData(listOfRooms[chatroomName].listOfClients, client, clientName + " has joined the chatroom.\n")
+                        clientName.send(createJoinBroadcast(chatroomName, self.host, self.port, listOfRooms[chatroomName].roomID, listOfRooms[chatroomName].joinID))
+                        listOfRooms[chatroomName].joinID += 1
+                        broadCastData(listOfRooms[chatroomName].listOfClients, client, createJoinBroadcast(chatroomName,self.host,self.port, listOfRooms[chatroomName].joinID))
+                    
+                    #CLIENT SENDS CHAT MESSAGE
                     elif(data[:4] == "CHAT"):
-
-                        
+                        chatroomName, joinID, clientName, message = parseMessage(data)
+                        broadCastData(listOfRooms[chatroomName].listOfClients,client, createChatBroadcast(chatroomName,clientName, message))
+                    
+                    #CLIENT SENDS KILL MESSAGE
                     elif (data == "KILL_SERVICE\n"):
                         print("Terminating sevrice")
                         closeAllRooms()
                         return
+                    
+                    #CLIENT SENDS HELO PROMPT
                     elif (data == "HELO text\n"):
                         response = HELO(self.host, self.port).encode()
                         client.send(response)
-                    else:
-                        response = data.encode()
-                        broadCastData(,client, "[" + clientName + "]:" + data)
+
+                    #CLIENT WANTS TO DISCONNECT
+                    elif(data[:9] == "DISCONNECT"):
+                        print("in disconect part")
             except:
                 self.numberOfJoinID -= 1
                 print(clientName + " has left the chatroom")

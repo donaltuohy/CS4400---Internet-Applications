@@ -7,6 +7,21 @@ def joinChatMessage(chatroomName, userName):
 	userName = "CLIENT_NAME: " + userName + "\n"
 	return chatroomName + "CLIENT_IP: 0\n" + "PORT: 0\n" + userName
 
+def parseJoinMessage(message):
+    splitMessage = message.split()
+    chatroomName = splitMessage[1]
+    host = splitMessage[3]
+    port = splitMessage[5]
+    roomID = splitMessage[7]
+    joinID = splitMessage[9]
+    return chatroomName, host, port, roomID, joinID
+
+def parseChatMessage(message):
+    splitMessage = message.split()
+    chatroomName = splitMessage[1]
+    senderName = splitMessage[3]
+    chatMessage = splitMessage[5:]
+    return chatroomName, senderName, chatMessage 
 
 class ThreadedClient(object):
 
@@ -16,18 +31,42 @@ class ThreadedClient(object):
         self.sock.settimeout(600)
         self.joinedRoom = False
         self.finished = False
+        self.roomID = 0
+        self.joinID = 0
     
     def listenToServer(self):
         
         while True:
             try:
                 response = (self.sock.recv(1024)).decode()
+                #SOCKET BROKEN OR CHATROOM CLOSED
                 if response == "" or response == "-9999":
                     self.sock.close()
                     self.finished = True
                     print("Chatroom has closed, goodbye.")
                     print("Press enter to exit.")
                     break
+
+                #RESPONSE AFTER JOINING THE CHATROOM
+                elif (response[:15] == "JOINED_CHATROOM"):
+                    chatroomName, host, port, roomId, joinId = parseJoinMessage(response)
+                    self.roomID = roomId
+                    self.joinID = joinId
+                    self.joinedRoom = True
+                    print("Joined the chatroom: ", chatroomName, " through port ", port, ".")
+                
+                #CHAT MESSAGE RECIEVED
+                elif (respone[:3] == "CHAT"):
+                    chatroomName, senderName, chatMessage = parseChatMessage(response)
+                    print("[",senderName,"] ", chatMessage)
+
+                #ERROR_CODE RECIEVED
+                elif (response[:9] == "ERROR_CODE"):
+                    print("Error recieved")
+
+                #LEFT RESPONSE FROM CHATROOM
+                elif (response[:12] == "LEFT_CHATROOM"):
+                    print("Succesfully left chatroom")
                 else:
                     sys.stdout.write(response)
             except:
@@ -42,12 +81,10 @@ class ThreadedClient(object):
                 return
             if self.joinedRoom:
                 message = sys.stdin.readline()
+                if message == "LEAVE":
             else:
-                print(chr(27) + "[2J") #Clear the console
-                print("Welcome to the chatroom")
-                print("_____________________________________\n")
-                message = joinChatMessage("Chatroom", name)
-                self.joinedRoom = True
+                chatroomName = input("Enter chat room name: ")
+                message = joinChatMessage(chatroomName, name)
             if self.finished:
                 return
             
