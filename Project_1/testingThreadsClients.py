@@ -18,9 +18,10 @@ def parseJoinMessage(message):
 
 def parseChatMessage(message):
     splitMessage = message.split()
-    chatroomName = splitMessage[1]
+    chatroomName = (splitMessage[1])[0]
     senderName = splitMessage[3]
     chatMessage = splitMessage[5:]
+    chatMessage = " ".join(chatMessage)
     return chatroomName, senderName, chatMessage 
 
 def createLeaveMessage(roomID, joinID,clientName):
@@ -45,7 +46,6 @@ class ThreadedClient(object):
         while True:
             try:
                 response = (self.sock.recv(1024)).decode()
-                print(response)
                 #SOCKET BROKEN OR CHATROOM CLOSED
                 if response == "" or response == "-9999":
                     self.sock.close()
@@ -56,15 +56,16 @@ class ThreadedClient(object):
 
                 #RESPONSE AFTER JOINING THE CHATROOM
                 elif (response[:15] == "JOINED_CHATROOM"):
-                    print("joined message recieved")
                     chatroomName, host, port, roomId, joinId = parseJoinMessage(response)
                     self.roomID = roomId
                     self.joinID = joinId
                     self.joinedRoom = True
                     print("Joined the chatroom: ", chatroomName, " through port ", port, ".")
+                elif (response[0] == "<"):
+                    print(response)
                 
                 #CHAT MESSAGE RECIEVED
-                elif (respone[:3] == "CHAT"):
+                elif (response[:4] == "CHAT"):
                     print("chat message recieved")
                     chatroomName, senderName, chatMessage = parseChatMessage(response)
                     print("[",senderName,"] ", chatMessage)

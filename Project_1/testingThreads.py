@@ -1,4 +1,4 @@
-import socket
+import socket, sys
 import threading
 
 
@@ -9,14 +9,18 @@ listOfRoomsIds = {}
 
 def closeAllRooms():
     for key in listOfRooms:
-        closeAllPorts(listOfRooms[key].listOfClients)
-        del listOfRooms[key]
-    print("All ports closed. Goodbye.")
+        print(key)
+        closeAllPorts((listOfRooms[key])[0].listOfClients)
+        print("All ports closed. Goodbye.")
+        sys.exit()
 
 def closeAllPorts(listOfClients):
     for key in listOfClients:
         socket = (listOfClients[key])[0]
         socket.send(("-9999").encode())
+
+def deleteClient(listOfClients, name):
+    del listOfClients[name]
 
 def parseName(joinMessage):
     Username = joinMessage.split()[8]
@@ -43,14 +47,11 @@ def createJoinBroadcast(chatroomName, host, port, roomID, joinID):
 
 #Function which broadcast a message to all connected clients bar the server and the one that sent the message
 def broadCastData(listOfClients,sock, message):
-    print("In broadcast function")
     for key in listOfClients:
-        print("In for loop")
         socket = (listOfClients[key])[0]
         if socket != sock:
             try:
                 #Send the message to the current client socket
-                print("sending ", message, " to ", listOfClients[key][1])
                 socket.send(message.encode())
             except: 
                 #Client socket not working, close it and remove it from the list of sockets
@@ -85,7 +86,7 @@ class ThreadedServer(object):
                 return
             client, address = self.sock.accept()
             socketKey = address[1]
-            client.settimeout(50)
+            client.settimeout(120)
             threading.Thread(target = self.listenToClient, args = (client, address, socketKey)).start()
 
     def listenToClient(self, client, address, socketKey):
@@ -96,7 +97,6 @@ class ThreadedServer(object):
 
             data = (client.recv(1024)).decode()
             if data:
-                    
                 #CLIENT SENDS JOIN MESSAGE
                 if(data[:13] == "JOIN CHATROOM"):
                     chatroomName, clientName = parseName(data)
@@ -112,40 +112,33 @@ class ThreadedServer(object):
                     print(clientName, " has the JoinID: ", (listOfRooms[chatroomName])[0].clientIDs)
                     client.send((createJoinBroadcast(chatroomName, self.host, self.port, (listOfRooms[chatroomName])[0].ID, (listOfRooms[chatroomName])[0].clientIDs)).encode())
                     (listOfRooms[chatroomName])[0].clientIDs += 1
-                    broadCastData((listOfRooms[chatroomName])[0].listOfClients, client, createJoinBroadcast(chatroomName,self.host,self.port, (listOfRooms[chatroomName])[0].ID,(listOfRooms[chatroomName])[0].clientIDs))
+                    broadCastData((listOfRooms[chatroomName])[0].listOfClients, client, "<" + clientName + "> has joined the room")
                     
                 #CLIENT SENDS CHAT MESSAGE
                 elif(data[:4] == "CHAT"):
-                    print("chat message recieved")
-                    print(data)
                     roomID, joinID, clientName, message = parseMessage(data)
                     chatroomName = (listOfRoomsIds[roomID])[0]
-                    broadCastData((listOfRooms[chatroomName])[0].listOfClients, client, createChatBroadcast(roomID,clientName, message))
-                    
-                #CLIENT SENDS KILL MESSAGE
-                elif (data == "KILL_SERVICE\n"):
-                    print("Terminating sevrice")
-                    closeAllRooms()
-                    return
-                    
-                #CLIENT SENDS HELO PROMPT
-                elif (data == "HELO text\n"):
-                    response = HELO(self.host, self.port).encode()
-                    client.send(response)
-
-                #CLIENT WANTS TO DISCONNECT
-                elif(data[:9] == "DISCONNECT"):
-                    print("in disconnect part")
-
-
-
+                    if (message == "KILL_SERVICE"):
+                        print("Terminating service")
+                        closeAllRooms()
+                        return
+                    elif (message == "HELO text"):
+                        response = HELO(self.host, self.port).encode()
+                        client.send(response)
+                    elif (message == "DISCONNECT"):
+                        broadCastData((listOfRooms[chatroomName])[0].listOfClients,client,"<" + clientName + "> has disconnected from the server")
+                        client.send(("-9999").encode())
+                    else:
+                        chatroomName = (listOfRoomsIds[roomID])[0]
+                        broadCastData((listOfRooms[chatroomName])[0].listOfClients, client, createChatBroadcast(roomID,clientName, message))
 
 if __name__ == "__main__":
-    while True:
-        portNum = input("Enter port number: ")
-        try:
-            portNum = int(portNum)
-            break
-        except ValueError:
-            pass
-    ThreadedServer('',portNum).listen()
+    
+    if(len(sys.argv) > 0):
+        portNum = int(sys.argv[1])
+    else:
+        portNum = 5000
+    host = socket.gethostbyname(socket.gethostname())
+    
+    print("Server started on: ", host,":", portNum )
+    ThreadedServer(host,portNum).listen()
