@@ -97,7 +97,11 @@ class ThreadedServer(object):
 
             data = (client.recv(1024)).decode()
             if data:
+                print(data)
                 #CLIENT SENDS JOIN MESSAGE
+                if(data[:4] == "HELO"):
+                    response = HELO(self.host, self.port, message).encode()
+                    client.send(response)
                 if(data[:13] == "JOIN CHATROOM"):
                     chatroomName, clientName = parseName(data)
                     if  chatroomName not in listOfRooms:
@@ -138,7 +142,7 @@ if __name__ == "__main__":
         portNum = int(sys.argv[1])
     else:
         portNum = 5000
-    host = "134.226.38.26"
+    host = "127.0.1.1"
     
     print("Server started on: ", host,":", portNum )
     ThreadedServer(host,portNum).listen()
