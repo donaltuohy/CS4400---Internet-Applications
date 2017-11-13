@@ -36,8 +36,8 @@ def parseMessage(chatMessage):
     message = " ".join(message)
     return chatroom, joinID, clientName, message
 
-def HELO(host, port):
-    return "HELO text\nIP: " + str(host) + "\nPort: " + str(port) + "\nStudentID: 14313774\n" 
+def HELO(host, port, message):
+    return  message + "\nIP: " + str(host) + "\nPort: " + str(port) + "\nStudentID: 14313774\n" 
 
 def createChatBroadcast(roomID, clientName, message):
     return "CHAT: " + str(roomID) + "\nCLIENT_NAME: " + clientName + "\nMESSAGE: " + message
@@ -122,8 +122,8 @@ class ThreadedServer(object):
                         print("Terminating service")
                         closeAllRooms()
                         return
-                    elif (message == "HELO text"):
-                        response = HELO(self.host, self.port).encode()
+                    elif (message[:4] == "HELO"):
+                        response = HELO(self.host, self.port, message).encode()
                         client.send(response)
                     elif (message == "DISCONNECT"):
                         broadCastData((listOfRooms[chatroomName])[0].listOfClients,client,"<" + clientName + "> has disconnected from the server")
@@ -138,7 +138,7 @@ if __name__ == "__main__":
         portNum = int(sys.argv[1])
     else:
         portNum = 5000
-    host = socket.gethostbyname(socket.gethostname())
+    host = "134.226.38.26"
     
     print("Server started on: ", host,":", portNum )
     ThreadedServer(host,portNum).listen()
