@@ -103,7 +103,7 @@ class ThreadedServer(object):
 
     def listenToClient(self, client, address, socketKey):
         while True:
-            
+            print("Listening...")
             if self.finished == True:
                 print("Finished is true")
                 return
