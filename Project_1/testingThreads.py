@@ -116,11 +116,13 @@ class ThreadedServer(object):
                     response = HELO(self.host, self.port, data).encode()
                     client.send(response)
                 elif(data[:5] == "LEAVE"):
+                    print("list of clients: ", (listOfRooms[chatroomName])[0].listOfClients)
                     roomID, joinID, clientName = parseLeave(data)
+                    chatroomName = (listOfRoomsIds[roomID])[0]
                     leaveResponse = createLeaveResponse(roomID, joinID)
                     client.send(leaveResponse.encode())
                     leftBroadcast = "<" +clientName + "> has left the room."
-                    broadCastData((listOfRooms[clientName])[0].listOfClients, client,leftBroadcast)
+                    broadCastData((listOfRooms[chatroomName])[0].listOfClients, client,leftBroadcast)
 
                 elif(data[:13] == "JOIN_CHATROOM"):
                     chatroomName, clientName = parseName(data)
@@ -132,7 +134,6 @@ class ThreadedServer(object):
                         (listOfRooms[chatroomName])[0].listOfClients[socketKey] = ([client, clientName, (listOfRooms[chatroomName])[0].clientIDs])
                     
                     (listOfRooms[chatroomName])[0].numberOfClients += 1
-                    print("list of clients: ", (listOfRooms[chatroomName])[0].listOfClients)
                     print(clientName," has joined: ", chatroomName)
                     print(clientName, " has the JoinID: ", (listOfRooms[chatroomName])[0].clientIDs)
                     client.send((createJoinBroadcast(chatroomName, self.host, self.port, (listOfRooms[chatroomName])[0].ID, (listOfRooms[chatroomName])[0].clientIDs)).encode())
