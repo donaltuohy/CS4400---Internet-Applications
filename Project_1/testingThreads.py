@@ -102,7 +102,7 @@ class ThreadedServer(object):
                 if(data[:4] == "HELO"):
                     response = HELO(self.host, self.port, message).encode()
                     client.send(response)
-                if(data[:13] == "JOIN CHATROOM"):
+                elif(data[:13] == "JOIN CHATROOM"):
                     chatroomName, clientName = parseName(data)
                     if  chatroomName not in listOfRooms:
                         listOfRooms[chatroomName] = [chatRoom(chatroomName,client, clientName, self.chatRoomIdCount)]
@@ -116,7 +116,9 @@ class ThreadedServer(object):
                     print(clientName, " has the JoinID: ", (listOfRooms[chatroomName])[0].clientIDs)
                     client.send((createJoinBroadcast(chatroomName, self.host, self.port, (listOfRooms[chatroomName])[0].ID, (listOfRooms[chatroomName])[0].clientIDs)).encode())
                     (listOfRooms[chatroomName])[0].clientIDs += 1
-                    broadCastData((listOfRooms[chatroomName])[0].listOfClients, client, "<" + clientName + "> has joined the room")
+                    joinchat = createChatBroadcast((listOfRooms[chatroomName])[0].roomID,clientName, "<" + clientName + "> has joined the room")
+                    broadCastData((listOfRooms[chatroomName])[0].listOfClients, client, joinchat)
+                    client.send(joinchat.encode())
                     
                 #CLIENT SENDS CHAT MESSAGE
                 elif(data[:4] == "CHAT"):
