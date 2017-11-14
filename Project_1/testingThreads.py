@@ -164,7 +164,7 @@ if __name__ == "__main__":
         portNum = int(sys.argv[1])
     else:
         portNum = 5000
-    host = "127.0.1.1"
+    host = "134.226.38.26"
     
     print("Server started on: ", host,":", portNum )
     ThreadedServer(host,portNum).listen()
