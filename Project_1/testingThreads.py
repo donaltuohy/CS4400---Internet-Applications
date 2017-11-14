@@ -51,7 +51,7 @@ def createChatBroadcast(roomID, clientName, message):
     return "CHAT: " + str(roomID) + "\nCLIENT_NAME: " + clientName + "\nMESSAGE: " + message + "\n"
 
 def createLeaveResponse(roomID, joinID):
-    return "LEFT_CHATROOM:" + roomID + "\nJOIN_ID: " + joinID + "\n"
+    return "LEFT_CHATROOM:" + str(roomID) + "\nJOIN_ID: " + str(joinID) + "\n"
 
 def createJoinBroadcast(chatroomName, host, port, roomID, joinID):
     return "JOINED_CHATROOM: " + chatroomName + "\nSERVER_IP: " + str(host) + "\nPORT: " + str(port) + "\nROOM_REF: " +  str(roomID) + "\nJOIN_ID: " + str(joinID) +"\n"
