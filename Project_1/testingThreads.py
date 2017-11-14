@@ -105,6 +105,7 @@ class ThreadedServer(object):
         while True:
             
             if self.finished == True:
+                print("Finished is true")
                 return
 
             data = (client.recv(1024)).decode()
