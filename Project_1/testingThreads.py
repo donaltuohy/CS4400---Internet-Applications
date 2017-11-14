@@ -132,6 +132,7 @@ class ThreadedServer(object):
                         (listOfRooms[chatroomName])[0].listOfClients[socketKey] = ([client, clientName, (listOfRooms[chatroomName])[0].clientIDs])
                     
                     (listOfRooms[chatroomName])[0].numberOfClients += 1
+                    print("list of clients: ", (listOfRooms[chatroomName])[0].listOfClients)
                     print(clientName," has joined: ", chatroomName)
                     print(clientName, " has the JoinID: ", (listOfRooms[chatroomName])[0].clientIDs)
                     client.send((createJoinBroadcast(chatroomName, self.host, self.port, (listOfRooms[chatroomName])[0].ID, (listOfRooms[chatroomName])[0].clientIDs)).encode())
