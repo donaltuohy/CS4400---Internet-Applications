@@ -40,13 +40,14 @@ def HELO(host, port, message):
     return  message + "IP: " + str(host) + "\nPort: " + str(port) + "\nStudentID: 14313774\n" 
 
 def createChatBroadcast(roomID, clientName, message):
-    return "CHAT: " + str(roomID) + "\nCLIENT_NAME: " + clientName + "MESSAGE: " + message
+    return "CHAT: " + str(roomID) + "\nCLIENT_NAME: " + clientName + "\nMESSAGE: " + message + "\n"
 
 def createJoinBroadcast(chatroomName, host, port, roomID, joinID):
     return "JOINED_CHATROOM: " + chatroomName + "\nSERVER_IP: " + str(host) + "\nPORT: " + str(port) + "\nROOM_REF: " +  str(roomID) + "\nJOIN_ID: " + str(joinID) +"\n"
 
 #Function which broadcast a message to all connected clients bar the server and the one that sent the message
 def broadCastData(listOfClients,sock, message):
+    print("Broadcasting: ", message)
     for key in listOfClients:
         socket = (listOfClients[key])[0]
         if socket != sock:
