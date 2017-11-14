@@ -53,6 +53,9 @@ def createChatBroadcast(roomID, clientName, message):
 def createLeaveResponse(roomID, joinID):
     return "LEFT_CHATROOM:" + str(roomID) + "\nJOIN_ID: " + str(joinID) + "\n"
 
+def removeClientFromList(listOfClients, clientName):
+    del listOfClients[clientName]
+
 def createJoinBroadcast(chatroomName, host, port, roomID, joinID):
     return "JOINED_CHATROOM: " + chatroomName + "\nSERVER_IP: " + str(host) + "\nPORT: " + str(port) + "\nROOM_REF: " +  str(roomID) + "\nJOIN_ID: " + str(joinID) +"\n"
 
@@ -122,6 +125,7 @@ class ThreadedServer(object):
                     leaveResponse = createLeaveResponse(roomID, joinID)
                     client.send(leaveResponse.encode())
                     leftBroadcast = "<" +clientName + "> has left the room."
+                    deleteClient((listOfRooms[chatroomName])[0].listOfClients,clientName)
                     broadCastData((listOfRooms[chatroomName])[0].listOfClients, client,leftBroadcast)
 
                 elif(data[:13] == "JOIN_CHATROOM"):
