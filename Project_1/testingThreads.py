@@ -27,6 +27,14 @@ def parseName(joinMessage):
     chatroomName = joinMessage.split()[1]
     return chatroomName, Username
 
+def parseLeave(leaveMessage):
+    splitMessage = leaveMessage.split()
+    chatID = int(splitMessage[1])
+    joinID = int(splitMessage[3])
+    clientName = splitMessage[5]
+    return chatID, joinID, clientName
+
+
 def parseMessage(chatMessage):
     splitMessage = chatMessage.split()
     chatroom = int(splitMessage[1])
@@ -41,6 +49,9 @@ def HELO(host, port, message):
 
 def createChatBroadcast(roomID, clientName, message):
     return "CHAT: " + str(roomID) + "\nCLIENT_NAME: " + clientName + "\nMESSAGE: " + message + "\n"
+
+def createLeaveResponse(roomID, joinID):
+    return "LEFT_CHATROOM:" + roomID + "\nJOIN_ID: " + joinID + "\n"
 
 def createJoinBroadcast(chatroomName, host, port, roomID, joinID):
     return "JOINED_CHATROOM: " + chatroomName + "\nSERVER_IP: " + str(host) + "\nPORT: " + str(port) + "\nROOM_REF: " +  str(roomID) + "\nJOIN_ID: " + str(joinID) +"\n"
@@ -103,6 +114,13 @@ class ThreadedServer(object):
                 if(data[:4] == "HELO"):
                     response = HELO(self.host, self.port, data).encode()
                     client.send(response)
+                elif(data[:5] == "LEAVE"):
+                    roomID, joinID, clientName = parseLeave(data)
+                    leaveResponse = createLeaveResponse(roomID, joinID)
+                    client.send(leaveResponse.encode())
+                    leftBroadcast = "<" +clientName + "> has left the room."
+                    broadCastData((listOfRooms[clientName])[0].listOfClients, client,leftBroadcast)
+
                 elif(data[:13] == "JOIN_CHATROOM"):
                     chatroomName, clientName = parseName(data)
                     if  chatroomName not in listOfRooms:
