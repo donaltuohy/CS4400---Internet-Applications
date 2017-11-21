@@ -20,8 +20,8 @@ def closeAllPorts(listOfClients):
         socket = (listOfClients[key])[0]
         socket.send(("-9999").encode())
 
-def deleteClient(listOfClients, name):
-    del listOfClients[name]
+def deleteClient(listOfClients, socketKey):
+    del listOfClients[socketKey]
 
 def parseName(joinMessage):
     Username = joinMessage.split()[7]
@@ -140,7 +140,7 @@ class ThreadedServer(object):
                     leaveResponse = createLeaveResponse(roomID, joinID)
                     client.send(leaveResponse.encode())
                     leftBroadcast = "<" +clientName + "> has left the room."
-                    deleteClient((listOfRooms[chatroomName])[0].listOfClients,clientName)
+                    deleteClient((listOfRooms[chatroomName])[0].listOfClients,socketKey)
                     broadCastData((listOfRooms[chatroomName])[0].listOfClients, client,leftBroadcast)
 
                 elif(data[:13] == "JOIN_CHATROOM"):
@@ -164,7 +164,7 @@ class ThreadedServer(object):
                     else:
                         (listOfConnectedClients[client]).joinedRooms[currRoomId] = currJoinId                     
                     
-                    print((listOfConnectedClients[client]).joinedRooms)
+                    print((listOfConnectedClients[client]).joinedRooms[currRoomId])
                     (listOfRooms[chatroomName])[0].numberOfClients += 1
                     print(clientName," has joined: ", chatroomName)
                     print(clientName, " has the JoinID: ", (listOfRooms[chatroomName])[0].clientIDs)
