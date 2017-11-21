@@ -3,6 +3,7 @@ import threading
 
 
 listOfRooms = {}
+listOfConnectedClients = {}
 listOfRoomsIds = {}
 
 
@@ -75,6 +76,14 @@ def broadCastData(listOfClients,sock, message):
                 del listOfClients[key]
 
 #CLASS FOR EACH CHATROOM
+
+class clientObject(object):
+    def __init__(self, client, name, firstRoomID, joinID):
+        self.clientName = name
+        self.joinedRooms = {}
+        self.joinedRooms[firstRoomID] = joinID
+        self.sock = client 
+
 class chatRoom(object):
     def __init__(self, name, firstClient, firstClientName, roomID):
         self.ChatroomName = name
@@ -83,6 +92,11 @@ class chatRoom(object):
         self.ID = roomID
         self.numberOfClients = 1
         self.clientIDs = 1
+
+    def getNewID(self):
+        self.clientIDs += 1
+        self.numberOfClients += 1
+        return self.clientIDs
 
 #MAIN CLASS
 class ThreadedServer(object):
@@ -112,6 +126,7 @@ class ThreadedServer(object):
                 return
 
             data = (client.recv(1024)).decode()
+
             if data:
                 print(data)
                 #CLIENT SENDS JOIN MESSAGE
@@ -130,13 +145,26 @@ class ThreadedServer(object):
 
                 elif(data[:13] == "JOIN_CHATROOM"):
                     chatroomName, clientName = parseName(data)
+
+                    #Add a new chatroom if not present
                     if  chatroomName not in listOfRooms:
                         listOfRooms[chatroomName] = [chatRoom(chatroomName,client, clientName, self.chatRoomIdCount)]
                         listOfRoomsIds[self.chatRoomIdCount] = [chatroomName]
                         self.chatRoomIdCount += 1
+                    #Add new client if chatroom exists
                     else:
                         (listOfRooms[chatroomName])[0].listOfClients[socketKey] = ([client, clientName, (listOfRooms[chatroomName])[0].clientIDs])
+
+                    currRoomId = (listOfRooms[chatroomName])[0].ID
+                    currJoinId = (listOfRooms[chatroomName])[0].clientIDs
+
+                    #If new client, add client to list of clients
+                    if client not in listOfConnectedClients:
+                        listOfConnectedClients[client] = clientObject(client,clientName, currRoomId, currJoinId)
+                    else:
+                        (listOfConnectedClients[client]).joinedRooms[currRoomId] = currJoinId                     
                     
+                    print((listOfConnectedClients[client]).joinedRooms)
                     (listOfRooms[chatroomName])[0].numberOfClients += 1
                     print(clientName," has joined: ", chatroomName)
                     print(clientName, " has the JoinID: ", (listOfRooms[chatroomName])[0].clientIDs)
@@ -170,7 +198,7 @@ if __name__ == "__main__":
         portNum = int(sys.argv[1])
     else:
         portNum = 5000
-    host = "134.226.38.26"
+    host = "127.0.0.1"
     
     print("Server started on: ", host,":", portNum )
     ThreadedServer(host,portNum).listen()
