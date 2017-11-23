@@ -133,15 +133,18 @@ class ThreadedServer(object):
     
     #Method which listens for new connections
     def listen(self):
-        self.sock.listen(5)
-        while True:
-            if self.finished:
-                return
-            client, address = self.sock.accept()
-            socketKey = address[1]
-            client.settimeout(120)
-            #Create a thread using the "listenToClient" function which will handle that client in it's own thread.
-            threading.Thread(target = self.listenToClient, args = (client, address, socketKey)).start()
+        try:
+            self.sock.listen(5)
+            while True:
+                if self.finished:
+                    return
+                client, address = self.sock.accept()
+                socketKey = address[1]
+                client.settimeout(120)
+                #Create a thread using the "listenToClient" function which will handle that client in it's own thread.
+                threading.Thread(target = self.listenToClient, args = (client, address, socketKey)).start()
+        except:
+            print("Server closed down.") 
 
     #Method which is called by client thread and constantly listens for incoming data form the client
     def listenToClient(self, client, address, socketKey):
@@ -190,7 +193,7 @@ class ThreadedServer(object):
                     #Add a new chatroom if not present. (The chatroom constructor takes in the details of the client that created it and automatically adds them to the client list)
                     if  chatroomName not in listOfRooms:
                         listOfRooms[chatroomName] = [chatRoom(chatroomName,client, clientName, self.chatRoomIdCount)]
-                        listOfRoomsIds[self.chatRoomIdCount] = [chatroomName]
+                        listOfRoomsIds[self.chatRoomIdCount] = chatroomName
                         self.chatRoomIdCount += 1
                     #Add new client to the chatroom if chatroom exists
                     else:
@@ -239,13 +242,14 @@ class ThreadedServer(object):
                     clientName = parseDisconnect(data)
 
                     #Step through each room that that client was connected to and delete that client then notify that room
-                    for key in ((listOfConnectedClients[client])[0].joinedRooms)
+                    for key in ((listOfConnectedClients[client]).joinedRooms):
                         currRoomName = listOfRoomsIds[key]
                         deleteClient((listOfRooms[currRoomName])[0].listOfClients, clientName)
                         broadCastData((listOfRooms[currRoomName])[0].listOfClients,client,"<" + clientName + "> has disconnected from the server")
                     
                     #close socket
                     client.close()
+                    return
 
                 ### CHAT MESSAGE ###
                 #Client sends chat message - broadcast it to all the clients in that room
@@ -253,8 +257,8 @@ class ThreadedServer(object):
 
                     #Parse the relevant data
                     roomID, joinID, clientName, message = parseMessage(data)
-                    chatroomName = (listOfRoomsIds[roomID])[0]
-
+                    chatroomName = (listOfRoomsIds[roomID])
+                    print(chatroomName)
                     #Broadcast this message to every client in the room
                     broadCastData((listOfRooms[chatroomName])[0].listOfClients, client, createChatBroadcast(roomID,clientName, message))
 
