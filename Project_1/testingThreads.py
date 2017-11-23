@@ -166,6 +166,7 @@ class ThreadedServer(object):
                         else:
                             (listOfConnectedClients[client]).joinedRooms[currRoomId] = currJoinId                     
                         
+                        client.send(joinchat.encode())
                         print((listOfConnectedClients[client]).joinedRooms[currRoomId])
                         (listOfRooms[chatroomName])[0].numberOfClients += 1
                         print(clientName," has joined: ", chatroomName)
@@ -174,7 +175,7 @@ class ThreadedServer(object):
                         (listOfRooms[chatroomName])[0].clientIDs += 1
                         joinchat = createChatBroadcast((listOfRooms[chatroomName])[0].ID,clientName, "<" + clientName + "> has joined the room")
                         broadCastData((listOfRooms[chatroomName])[0].listOfClients, client, joinchat)
-                        client.send(joinchat.encode())
+                        
                         
                     #CLIENT SENDS CHAT MESSAGE
                     elif(data[:4] == "CHAT"):
@@ -194,7 +195,7 @@ class ThreadedServer(object):
                             chatroomName = (listOfRoomsIds[roomID])[0]
                             broadCastData((listOfRooms[chatroomName])[0].listOfClients, client, createChatBroadcast(roomID,clientName, message))
             except Exception:
-                print("Fuccck")
+                print("arggghghhhh")
 if __name__ == "__main__":
     
     if(len(sys.argv) > 0):
