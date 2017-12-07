@@ -43,10 +43,10 @@ This function was essential in creating the chatroom. It allows my server to bro
 
 ## Dictionaries
 
-'''python
+```python
 listOfRooms = {}        #Key is chatroom Name
 listOfConnectedClients = {}     #Key is the client socket
-'''
+```
 
 These dictionaries were also essential for maintaining the chat server as it provided quick and easy access to each chat room and client when needed. CLients and rooms can easily be added and removed from these dictionaries along with all the relevant details for each.
 
