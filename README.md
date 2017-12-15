@@ -4,6 +4,8 @@
 * Student Number:   14313774
 * Assignment 1: Socket Chat Server
 
+Note: The testingThreadsClients.py file is only there for personal testing.
+
 ## Overall Design
 The chat server I have designed consists of 3 classes:
 * A server class
